@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 5.0 - Social & Routine Phrasal Verbs</title>
+    <style>
+        :root { --primary: #1a73e8; --success: #34a853; --danger: #ea4335; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
+        .sidebar {
+            width: 240px; height: 100vh; background: white; position: fixed;
+            border-right: 1px solid #ddd; padding: 25px; box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .stat-card { width: 100%; background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid #eee; }
+        .stat-label { font-size: 11px; text-transform: uppercase; color: #777; }
+        .stat-value { font-size: 28px; font-weight: bold; display: block; margin-top: 5px; }
+        #score { color: var(--success); }
+        #errors { color: var(--danger); }
+
+        .main-content { margin-left: 240px; width: calc(100% - 240px); padding: 40px; }
+        .game-container { display: flex; gap: 40px; justify-content: center; align-items: flex-start; }
+        
+        .column { display: flex; flex-direction: column; gap: 12px; width: 340px; }
+        .img-card { 
+            background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            cursor: pointer; border: 3px solid transparent; transition: 0.3s;
+        }
+        .img-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; pointer-events: none; }
+        .img-card.selected { border-color: var(--primary); box-shadow: 0 0 15px rgba(26,115,232,0.3); }
+        .img-card.matched { border-color: var(--success); opacity: 0.3; pointer-events: none; }
+
+        .word-btn {
+            background: white; padding: 18px; border-radius: 10px; border: 2px solid #ddd;
+            cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .word-btn:hover { border-color: var(--primary); background: #fafafa; }
+        .word-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .word-btn.matched { background: var(--success) !important; color: white !important; border-color: var(--success); pointer-events: none; }
+        
+        .speaker-icon { font-size: 18px; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; }
+        .speaker-icon:hover { background: rgba(0,0,0,0.1); }
+
+        .info-panel {
+            position: fixed; bottom: 30px; right: 30px; width: 380px;
+            background: white; padding: 25px; border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); display: none;
+            border-left: 8px solid var(--success); animation: slideUp 0.4s ease-out;
+            z-index: 100;
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .trans-text { color: var(--danger); font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+        .speak-text { color: #512da8; font-style: italic; font-size: 14px; border-top: 1px dashed #ddd; padding-top: 10px; line-height: 1.4; }
+
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-8px);} 75% {transform: translateX(8px);} }
+        .wrong-anim { animation: shake 0.3s; background: var(--danger) !important; color: white !important; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2 style="color: var(--primary); text-align: center;">IELTS Flash</h2>
+    <div class="stat-card">
+        <span class="stat-label">Correct</span>
+        <span class="stat-value" id="score">0</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Errors</span>
+        <span class="stat-value" id="errors">0</span>
+    </div>
+</div>
+
+<div class="main-content">
+    <h1 style="text-align: center; color: #333; margin-bottom: 30px;">Matching: Phrasal Verbs in Action</h1>
+    <div class="game-container">
+        <div class="column" id="img-col"></div>
+        <div class="column" id="word-col"></div>
+    </div>
+</div>
+
+<div class="info-panel" id="info-panel">
+    <div class="trans-text" id="info-trans"></div>
+    <div class="speak-text" id="info-speak"></div>
+</div>
+
+<script>
+const data = [
+    { id: 1, phrase: "Sleep in", trans: "Ngủ nướng", speak: "Do you sleep in on weekends or wake up early?", img: "bed,sleep,late" },
+    { id: 2, phrase: "Hang out", trans: "Đi chơi/Dành thời gian thư giãn với bạn bè", speak: "Where do you and your friends usually hang out?", img: "friends,cafe,chatting" },
+    { id: 3, phrase: "Pick up", trans: "Đón ai đó (bằng xe)", speak: "Who usually picks you up after school or work?", img: "car,waiting,taxi" },
+    { id: 4, phrase: "Put on clothes", trans: "Mặc quần áo", speak: "What do you usually put on when you go to a party?", img: "fashion,clothes,dressing" },
+    { id: 5, phrase: "Whip up a meal", trans: "Nấu nhanh một bữa ăn", speak: "Can you whip up something to eat when you have guests?", img: "cooking,fast,chef" },
+    { id: 6, phrase: "Wash up", trans: "Rửa bát đĩa", speak: "How do you feel about washing up after a big party?", img: "kitchen,sink,dishes" },
+    { id: 7, phrase: "Eat out", trans: "Ăn ngoài hàng", speak: "Do you prefer eating out or cooking at home?", img: "dinner,restaurant" },
+    { id: 8, phrase: "Mess up the room", trans: "Làm bừa bộn", speak: "Does your roommate ever mess up the common area?", img: "messy,room,clothes" },
+    { id: 9, phrase: "Clear up the table", trans: "Dọn dẹp bàn ăn", speak: "Is it your job to clear up the table after dinner?", img: "table,cleaning,house" },
+    { id: 10, phrase: "Heat up leftovers", trans: "Hâm nóng thức ăn", speak: "Is it healthy to heat up leftovers in a microwave?", img: "microwave,lunch" }
+];
+
+let selectedImg = null;
+let score = 0;
+let errors = 0;
+
+const sfxCorrect = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
+const sfxWrong = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+
+function init() {
+    const imgCol = document.getElementById('img-col');
+    const wordCol = document.getElementById('word-col');
+
+    const shuffledImgs = [...data].sort(() => Math.random() - 0.5);
+    const shuffledWords = [...data].sort(() => Math.random() - 0.5);
+
+    shuffledImgs.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'img-card';
+        div.dataset.id = item.id;
+        div.innerHTML = `<img src="https://loremflickr.com/400/250/${item.img}?random=${item.id}" alt="task">`;
+        div.onclick = () => {
+            document.querySelectorAll('.img-card').forEach(c => c.classList.remove('selected'));
+            div.classList.add('selected');
+            selectedImg = div;
+        };
+        imgCol.appendChild(div);
+    });
+
+    shuffledWords.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'word-btn';
+        div.dataset.id = item.id;
+        div.innerHTML = `<span>${item.phrase}</span> <span class="speaker-icon">🔊</span>`;
+        div.onclick = (e) => {
+            if (e.target.classList.contains('speaker-icon')) {
+                speak(item.phrase);
+                return;
+            }
+            handleMatch(div);
+        };
+        wordCol.appendChild(div);
+    });
+}
+
+function handleMatch(wordEl) {
+    if (!selectedImg) { alert("Vui lòng chọn ảnh trước!"); return; }
+
+    if (selectedImg.dataset.id === wordEl.dataset.id) {
+        selectedImg.classList.add('matched');
+        wordEl.classList.add('matched');
+        score++;
+        document.getElementById('score').innerText = score;
+        sfxCorrect.play();
+        showInfo(wordEl.dataset.id);
+        selectedImg = null;
+        document.querySelectorAll('.img-card').forEach(c => c.classList.remove('selected'));
+    } else {
+        errors++;
+        document.getElementById('errors').innerText = errors;
+        wordEl.classList.add('wrong-anim');
+        sfxWrong.play();
+        setTimeout(() => wordEl.classList.remove('wrong-anim'), 400);
+    }
+}
+
+function speak(text) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'en-US';
+    msg.rate = 0.85;
+    window.speechSynthesis.speak(msg);
+}
+
+function showInfo(id) {
+    const item = data.find(d => d.id == id);
+    const panel = document.getElementById('info-panel');
+    document.getElementById('info-trans').innerText = "💡 Nghĩa: " + item.trans;
+    document.getElementById('info-speak').innerText = "🗣️ Speaking: " + item.speak;
+    panel.style.display = 'block';
+    setTimeout(() => { panel.style.display = 'none'; }, 8000);
+}
+
+init();
+</script>
+</body>
+</html>

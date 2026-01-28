@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS 5.0 Interactive Learning</title>
+    <style>
+        :root { 
+            --primary: #1a73e8; --success: #34a853; --danger: #ea4335; 
+            --bg: #f0f2f5; --sidebar-w: 220px;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); margin: 0; display: flex; 
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w); height: 100vh; background: white;
+            position: fixed; border-right: 1px solid #ddd;
+            padding: 25px; box-sizing: border-box; display: flex; flex-direction: column;
+            align-items: center;
+        }
+        .stats-title { font-size: 14px; color: #777; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+        .stat-card {
+            width: 100%; background: #f8f9fa; padding: 20px; border-radius: 12px;
+            margin-bottom: 15px; text-align: center; border: 1px solid #eee;
+        }
+        .stat-value { font-size: 28px; font-weight: bold; display: block; }
+        #score { color: var(--success); }
+        #errors { color: var(--danger); }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-w); width: 100%; padding: 40px;
+            display: flex; justify-content: center;
+        }
+        .container { max-width: 700px; width: 100%; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 10px; }
+        .sub-title { text-align: center; color: #666; margin-bottom: 40px; }
+        
+        .section-header {
+            background: var(--primary); color: white; padding: 12px 20px;
+            border-radius: 8px; margin: 40px 0 20px 0; font-weight: bold;
+        }
+
+        .question-card {
+            background: white; padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+            border: 2px solid transparent; transition: 0.3s;
+        }
+        .task-img { 
+            width: 100%; height: 250px; object-fit: cover; 
+            border-radius: 10px; margin-bottom: 20px; 
+        }
+        .options { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+        
+        button { 
+            padding: 12px 24px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: 600; transition: 0.2s; 
+        }
+        .opt-btn { background: #f1f3f4; border: 1px solid #dadce0; color: #3c4043; }
+        .opt-btn:hover { background: #e8eaed; }
+        .btn-trans { background: var(--danger); color: white; width: 100%; margin-top: 15px; font-size: 14px; }
+        
+        .info-box { 
+            background: #fdf7e3; padding: 15px; border-radius: 8px; 
+            display: none; margin-top: 15px; border-left: 5px solid #f1c40f;
+        }
+        .speaking-prompt { color: #6a1b9a; font-style: italic; margin-top: 10px; display: block; line-height: 1.4; }
+        .trans-text { color: #d32f2f; margin-bottom: 8px; font-weight: bold; border-bottom: 1px solid #ffe082; padding-bottom: 5px; }
+
+        /* Animations */
+        @keyframes correct-pop { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+        @keyframes wrong-shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-8px);} 75% {transform: translateX(8px);} }
+        .is-correct { background: var(--success) !important; color: white !important; animation: correct-pop 0.4s; pointer-events: none; }
+        .is-wrong { background: var(--danger) !important; color: white !important; animation: wrong-shake 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="stats-title">Progress Tracker</div>
+    <div class="stat-card">
+        <span class="stats-title">Correct</span>
+        <span class="stat-value" id="score">0</span>
+    </div>
+    <div class="stat-card">
+        <span class="stats-title">Errors</span>
+        <span class="stat-value" id="errors">0</span>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="container" id="quiz-container">
+        <h1>🏠 Daily Activities & Chores</h1>
+        <p class="sub-title">Level: IELTS 5.0 | Interactive Exercise</p>
+        <div id="questions-wrapper"></div>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    // PART 1: MCQ
+    { q: "1. Every morning, I _______ my bed as soon as I wake up.", options: ["do", "make", "fix"], correct: 1, trans: "Mỗi sáng, tôi dọn dẹp giường ngay sau khi thức dậy.", speak: "Do you always make your bed in the morning? Why?", img: "bedding" },
+    { q: "2. My mother usually _______ the groceries at the supermarket.", options: ["does", "goes", "takes"], correct: 0, trans: "Mẹ tôi thường đi mua thực phẩm ở siêu thị.", speak: "Where does your family usually buy groceries?", img: "grocery" },
+    { q: "3. It’s my brother’s turn to _______ the rubbish out tonight.", options: ["move", "bring", "take"], correct: 2, trans: "Đến lượt anh trai tôi đi đổ rác tối nay.", speak: "Who is responsible for taking out the rubbish in your home?", img: "trash-can" },
+    { q: "4. I often _______ the floor twice a week to remove dust.", options: ["mop", "iron", "hang"], correct: 0, trans: "Tôi thường lau sàn nhà 2 lần một tuần để dọn sạch bụi.", speak: "How often do you clean your house?", img: "mopping" },
+    { q: "5. After having dinner, we always _______ the washing-up.", options: ["make", "do", "clean"], correct: 1, trans: "Sau bữa tối, chúng tôi luôn đi rửa bát.", speak: "Do you prefer doing the washing-up or cooking dinner?", img: "dishes" },
+    { q: "6. I need to _______ my clothes because they are wrinkled.", options: ["fold", "iron", "wash"], correct: 1, trans: "Tôi cần là quần áo vì chúng bị nhăn.", speak: "Do you think ironing clothes is a waste of time?", img: "ironing-clothes" },
+    { q: "7. We usually _______ the table before having lunch.", options: ["set", "put", "layout"], correct: 0, trans: "Chúng tôi thường bày bàn ăn trước khi ăn trưa.", speak: "How do you help your parents with meals?", img: "table-setting" },
+    { q: "8. My father enjoys _______ the garden in the evening.", options: ["doing", "making", "tending"], correct: 2, trans: "Bố tôi thích chăm sóc vườn vào buổi tối.", speak: "Does your house have a garden? If not, would you like one?", img: "gardening" },
+    { q: "9. Can you help me _______ the laundry? It's sunny.", options: ["hang out", "put on", "take off"], correct: 0, trans: "Bạn giúp mình phơi quần áo nhé? Trời đang nắng.", speak: "Who usually does the laundry in your family?", img: "laundry-day" },
+    { q: "10. I often _______ my emails after I arrive at work.", options: ["look", "check", "watch"], correct: 1, trans: "Tôi thường kiểm tra email ngay sau khi đến chỗ làm.", speak: "What is the first thing you do when you start your workday?", img: "emails" },
+
+    // PART 2: GAP FILL
+    { q: "11. My daily _______ starts at 6:00 AM.", options: ["routine", "habit", "way"], correct: 0, trans: "Thói quen hàng ngày của tôi bắt đầu lúc 6 giờ sáng.", speak: "Tell me about your typical morning routine.", img: "morning-routine" },
+    { q: "12. I help my mom to _______ the carpet with a machine.", options: ["sweep", "vacuum", "brush"], correct: 1, trans: "Tôi giúp mẹ hút bụi tấm thảm bằng máy.", speak: "What machines or tools do you use for housework?", img: "vacuuming" },
+    { q: "13. There is always a lot of _______ to do in a big family.", options: ["housework", "homework", "job"], correct: 0, trans: "Luôn có rất nhiều việc nhà phải làm trong một gia đình lớn.", speak: "Do you think doing housework is a good way to relax?", img: "cleaning-house" },
+    { q: "14. I usually _______ the dog for a walk in the afternoon.", options: ["run", "take", "bring"], correct: 1, trans: "Tôi thường dẫn chó đi dạo vào buổi chiều.", speak: "Do you enjoy walking in the park with a pet?", img: "dog-walking" },
+    { q: "15. I always _______ my alarm clock for 6:30 AM.", options: ["set", "fix", "make"], correct: 0, trans: "Tôi luôn đặt báo thức lúc 6:30 sáng.", speak: "Do you wake up immediately when the alarm goes off?", img: "alarm-clock" },
+
+    // PART 3: GRAMMAR
+    { q: "16. I _______ (clean) the kitchen to keep it hygienic.", options: ["clean regularly", "regularly clean", "cleaning regularly"], correct: 1, trans: "Tôi thường xuyên dọn dẹp nhà bếp để giữ vệ sinh.", speak: "Is your kitchen the cleanest room in your house?", img: "clean-kitchen" },
+    { q: "17. My dad only mops the floor _______.", options: ["once a week", "one week", "weekly once"], correct: 0, trans: "Bố tôi chỉ lau sàn nhà một lần một tuần.", speak: "What is a chore you only do once a week?", img: "calendar-weekly" },
+    { q: "18. We frequently order food, but tonight mom _______ (cook).", options: ["cooks", "is cooking", "cooked"], correct: 1, trans: "Chúng tôi thường đặt đồ ăn, nhưng tối nay mẹ đang nấu ăn.", speak: "Do you prefer home-cooked meals or takeaway?", img: "home-cooking" },
+    { q: "19. I _______ (forget) to water the plants.", options: ["occasionally forget", "forget occasionally", "am forgetting"], correct: 0, trans: "Thỉnh thoảng tôi quên tưới cây.", speak: "What is a household chore that you occasionally forget?", img: "watering-plants" },
+    { q: "20. She goes to the gym _______ (cách ngày).", options: ["every day", "every other day", "twice a day"], correct: 1, trans: "Cô ấy đi tập gym cách ngày một lần.", speak: "Do you prefer exercising every day or every other day?", img: "gym-workout" }
+];
+
+let score = 0;
+let errors = 0;
+const sfxCorrect = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
+const sfxWrong = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3');
+
+function init() {
+    const wrapper = document.getElementById('questions-wrapper');
+
+    quizData.forEach((item, idx) => {
+        if(idx === 0) wrapper.innerHTML += `<div class="section-header">PART 1: VOCABULARY MCQ</div>`;
+        if(idx === 10) wrapper.innerHTML += `<div class="section-header">PART 2: DAILY ROUTINE (GAP FILL)</div>`;
+        if(idx === 15) wrapper.innerHTML += `<div class="section-header">PART 3: GRAMMAR & FREQUENCY</div>`;
+
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.innerHTML = `
+            <img class="task-img" src="https://loremflickr.com/600/400/${item.img}?random=${idx}" alt="task-image">
+            <p><strong>Question ${idx+1}:</strong> ${item.q}</p>
+            <div class="options" id="btns-${idx}">
+                ${item.options.map((opt, i) => `<button class="opt-btn" onclick="handleSelect(${idx}, ${i})">${opt}</button>`).join('')}
+            </div>
+            <div class="info-box" id="info-${idx}">
+                <div class="trans-text" id="trans-${idx}" style="display:none">Dịch: ${item.trans}</div>
+                <div class="speaking-prompt">🗣️ <strong>Speaking Prompt:</strong> ${item.speak}</div>
+            </div>
+            <button class="btn-trans" onclick="toggleTrans(${idx})">Dịch nghĩa</button>
+        `;
+        wrapper.appendChild(card);
+    });
+}
+
+window.handleSelect = (qIdx, oIdx) => {
+    const item = quizData[qIdx];
+    const btns = document.querySelectorAll(`#btns-${qIdx} button`);
+    const info = document.getElementById(`info-${qIdx}`);
+    const card = btns[oIdx].closest('.question-card');
+
+    if (oIdx === item.correct) {
+        if (!btns[oIdx].classList.contains('is-correct')) {
+            score++;
+            document.getElementById('score').innerText = score;
+            sfxCorrect.play();
+        }
+        btns.forEach(b => b.classList.remove('is-wrong'));
+        btns[oIdx].className = "opt-btn is-correct";
+        info.style.display = "block";
+        card.style.borderColor = "var(--success)";
+    } else {
+        if (!btns[oIdx].classList.contains('is-wrong')) {
+            errors++;
+            document.getElementById('errors').innerText = errors;
+            sfxWrong.play();
+        }
+        btns[oIdx].classList.add('is-wrong');
+        setTimeout(() => btns[oIdx].classList.remove('is-wrong'), 500);
+    }
+};
+
+window.toggleTrans = (idx) => {
+    const t = document.getElementById(`trans-${idx}`);
+    const info = document.getElementById(`info-${idx}`);
+    info.style.display = "block";
+    t.style.display = t.style.display === "none" ? "block" : "none";
+};
+
+init();
+</script>
+</body>
+</html>
